@@ -15,7 +15,7 @@ class TodoListViewController: UITableViewController {
     
     
     
-    var itemArray = ["Item 1", "Item 2", "Item 3"]
+    var itemArray: [String] = [String]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
