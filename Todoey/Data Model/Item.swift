@@ -8,7 +8,7 @@
 
 import Foundation
 
-class item {
+class Item {
     var title: String = ""
     var done: Bool = false
 }
