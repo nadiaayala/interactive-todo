@@ -7,15 +7,14 @@
 //
 
 import UIKit
+import CoreData
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: UITableViewController  {
     
 
 //    @IBOutlet var todoTableView: UITableView!
-    
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
-    
-    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+
     var itemArray: [Item] = [Item]()
     
     let defaults = UserDefaults.standard
@@ -23,7 +22,8 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+
 //        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
 //            itemArray = items
 //        }
@@ -63,7 +63,10 @@ class TodoListViewController: UITableViewController {
         //Next line checks the currenct value of the done property of the selected item and then changes it to its opposite
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        saveItems()
+        
+           //context.delete(itemArray[indexPath.row])
+          //itemArray.remove(at: indexPath.row)
+          saveItems()
  
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -77,8 +80,13 @@ class TodoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if textField.text != "" {
-                let newItem = Item()
+                
+                //At the time pooint when the app is running live inside the user's iPhone, this shared ui application will correspond to the live application object. The delegate is the AppDelegate and we will cast it as our AppDelegate class.
+                //1. Tap into the UIApplication class, 2. tap into the shared property, which corresponds to the current app as an object, 3. tap into its delegate, 4. cast it as appdelegate (because they both inherit from the same class UIApplicationDelegate this is valid). 5 We now have access to our AppDelegate as an object and we can get its propery persistentContainer
+                
+                let newItem = Item(context: self.context)
                 newItem.title = textField.text!
+                newItem.done = false
                 self.itemArray.append(newItem)
                 
                 self.saveItems()
@@ -101,16 +109,12 @@ class TodoListViewController: UITableViewController {
     
     func saveItems(){
         
-        let encoder = PropertyListEncoder()
         
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try self.context.save()
         }
         catch{
-            print("Error encoding item array")
-            print(error)
-            
+            print("Error saving context \(error)")
         }
         
         self.tableView.reloadData()
@@ -118,21 +122,68 @@ class TodoListViewController: UITableViewController {
         
     }
     
-    func loadItems(){
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()){
+
+//        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do{
+            //The output for this method will be an array of Items that is stored in our persistent container
+            itemArray =  try context.fetch(request)
+        }
+        catch{
+            print("Error fetching data from context. \(error)")
+        }
         
-        if let data = try? Data(contentsOf: dataFilePath!){
-            let decoder = PropertyListDecoder()
-            do{
-                itemArray = try decoder.decode([Item].self, from: data)
+        tableView.reloadData()
+    }
+}
+    
+
+
+// MARK: - Search bar methods
+extension TodoListViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+    
+        
+//        do{
+//            //The output for this method will be an array of Items that is stored in our persistent container
+//            itemArray =  try context.fetch(request)
+//        }
+//        catch{
+//            print("Error fetching data from context. \(error)")
+//        }
+        
+        loadItems(with: request)
+        
+        
+        tableView.reloadData()
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            
+            loadItems()
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
             }
-            catch {
-                print("Error decoding item array, \(error)")
-            }
+            
+            
         }
     }
+    
+        
+}
+    
     
     
     
 
-}
+
 
