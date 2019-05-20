@@ -25,7 +25,7 @@ class CategoryViewController: UITableViewController {
     }
     
     //MARK: - TableView Data Source methods
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
         return categoryArray.count
@@ -35,7 +35,7 @@ class CategoryViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
-        cell.textLabel?.text = categoryArray[indexPath.row].name
+        cell.textLabel?.text = categoryArray[indexPath.row].title
         
         return cell
         
@@ -58,6 +58,29 @@ class CategoryViewController: UITableViewController {
             
 
         }
+    }
+    
+    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
+        
+        let delete = UITableViewRowAction(style: .destructive, title: "Delete") { (action, indexPath) in
+            // delete item at indexPath
+            let deletedItem = self.categoryArray[indexPath.row].title
+            self.categoryArray.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            print(self.categoryArray)
+            //            self.saveItems()
+            self.deleteCategory(objectToDelete: deletedItem!)
+        }
+        
+        let share = UITableViewRowAction(style: .default, title: "Share") { (action, indexPath) in
+            // share item at indexPath
+            print("I want to share: \(self.categoryArray[indexPath.row])")
+        }
+        
+        share.backgroundColor = UIColor.lightGray
+        
+        return [delete, share]
+        
     }
     
     
@@ -94,6 +117,29 @@ class CategoryViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    func deleteCategory(objectToDelete: String){
+        let fetchRequest = NSFetchRequest<Cat>(entityName: "Cat")
+        fetchRequest.predicate = NSPredicate(format: "title = %@", objectToDelete)
+        
+        do {
+            let test = try self.context.fetch(fetchRequest)
+            
+            let objectToDelete = test[0] as NSManagedObject
+            context.delete(objectToDelete)
+            
+            do{
+                try context.save()
+            }
+            catch{
+                print("Error: \(error)")
+            }
+        }
+            
+        catch {
+            print("Error: \(error)")
+        }
+    }
+    
     
     //MARK: - Add new categories
     
@@ -105,7 +151,7 @@ class CategoryViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if textField.text != "" {
                 let newCat = Cat(context: self.context)
-                newCat.name = textField.text!
+                newCat.title = textField.text!
                 self.categoryArray.append(newCat)
                 
                 self.saveCategories()

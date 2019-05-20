@@ -40,7 +40,7 @@ class TodoListViewController: UITableViewController  {
         
     }
 
-    //MARK - TableView methods
+    //MARK - TableView data source methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
     }
@@ -77,7 +77,30 @@ class TodoListViewController: UITableViewController  {
           //itemArray.remove(at: indexPath.row)
           saveItems()
  
-        tableView.deselectRow(at: indexPath, animated: true)
+//        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
+        
+        let delete = UITableViewRowAction(style: .destructive, title: "Delete") { (action, indexPath) in
+            // delete item at indexPath
+            let deletedItem = self.itemArray[indexPath.row].title
+            self.itemArray.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            print(self.itemArray)
+//            self.saveItems()
+            self.deleteItem(objectToDelete: deletedItem!)
+        }
+        
+        let share = UITableViewRowAction(style: .default, title: "Share") { (action, indexPath) in
+            // share item at indexPath
+            print("I want to share: \(self.itemArray[indexPath.row])")
+        }
+        
+        share.backgroundColor = UIColor.lightGray
+        
+        return [delete, share]
+        
     }
     
     
@@ -98,8 +121,9 @@ class TodoListViewController: UITableViewController  {
                 newItem.done = false
                 newItem.parentCategory = self.selectedCategory
                 self.itemArray.append(newItem)
-                
                 self.saveItems()
+                
+               
                 
                 }
             
@@ -137,7 +161,7 @@ class TodoListViewController: UITableViewController  {
 
 //        let request : NSFetchRequest<Item> = Item.fetchRequest()
         
-        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        let categoryPredicate = NSPredicate(format: "parentCategory.title MATCHES %@", selectedCategory!.title!)
         
         if let additionalPredicate = predicate {
             request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
@@ -157,6 +181,29 @@ class TodoListViewController: UITableViewController  {
         }
         
         tableView.reloadData()
+    }
+    
+    func deleteItem(objectToDelete: String){
+        let fetchRequest = NSFetchRequest<Item>(entityName: "Item")
+        fetchRequest.predicate = NSPredicate(format: "title = %@", objectToDelete)
+        
+        do {
+            let test = try self.context.fetch(fetchRequest)
+            
+            let objectToDelete = test[0] as NSManagedObject
+            context.delete(objectToDelete)
+            
+            do{
+                try context.save()
+            }
+            catch{
+                print("Error: \(error)")
+            }
+        }
+            
+        catch {
+            print("Error: \(error)")
+        }
     }
 }
     
