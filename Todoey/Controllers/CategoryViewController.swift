@@ -148,7 +148,7 @@ class CategoryViewController: UITableViewController {
 
         let alertController = UIAlertController(title: "Add category", message: " ", preferredStyle: .alert)
 
-        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+        let addAction = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if textField.text != "" {
                 let newCat = Cat(context: self.context)
                 newCat.title = textField.text!
@@ -159,7 +159,9 @@ class CategoryViewController: UITableViewController {
                 
             }
     }
-        alertController.addAction(action)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        alertController.addAction(cancelAction)
+        alertController.addAction(addAction)
         
         alertController.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new item"
