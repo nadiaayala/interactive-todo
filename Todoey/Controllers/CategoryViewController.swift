@@ -159,7 +159,8 @@ class CategoryViewController: UITableViewController {
                 
             }
     }
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
+        
         alertController.addAction(cancelAction)
         alertController.addAction(addAction)
         

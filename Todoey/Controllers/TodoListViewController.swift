@@ -124,11 +124,14 @@ class TodoListViewController: UITableViewController  {
                 self.saveItems()
                 
                
-                
+       
                 }
             
         }
         
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
+        
+        alertController.addAction(cancelAction)
         alertController.addAction(action)
         
         alertController.addTextField { (alertTextField) in
